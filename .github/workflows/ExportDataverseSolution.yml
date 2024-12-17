@@ -1,0 +1,72 @@
+
+
+
+jobs:
+  build:
+name: Export Dataverse Solution
+run-name: Getting ${{ github.event.inputs.solution_name }} from pipelines host environment and committing
+on:
+  repository_dispatch:
+    types: [repository_dispatch]
+  workflow_dispatch:
+    inputs:
+      artifact_url:
+        description: "The url of the Dataverse environment to export from."
+        default: "https://ljralm-dev.crm9.dynamics.com/"
+        required: true
+      solution_name:
+        description: "Name of the Solution in Dataverse environment"
+        required: true
+      user_name: 
+        description: "User name for the commit"
+        required: true
+      source_branch:
+        description: "Branch for the solution commit"
+        required: true
+      target_branch:
+        description: "Branch to create for the solution commit"
+        required: false
+      commit_message:
+        description: "Message to provide for the commit"
+        required: true
+permissions:
+  contents: write
+jobs:
+  export-unpack-commit:
+    runs-on: windows-latest   # alternate runner OS is: ubuntu-latest
+
+    steps:
+    - name: Install Power Platform Tools
+      uses: microsoft/powerplatform-actions/actions-install@v1
+
+    - name: Export Solution
+      uses: microsoft/powerplatform-actions/export-solution@v1
+      with:
+        environment-url: 'https://myenv.crm.dynamics.com'
+        user-name: 'me@myenv.onmicrosoft.com'
+        password-secret: ${{ secrets.MYPASSWORD }}
+        solution-name: aSolution
+        solution-output-file: 'aSolution.zip'
+        working-directory: 'out'
+
+    - name: Unpack Solution
+      uses: microsoft/powerplatform-actions/unpack-solution@v1
+      with:
+        solution-file: 'out/aSolution1.zip'
+        solution-folder: 'out/solutions/solution one'
+        solution-type: 'Unmanaged'
+        overwrite-files: true
+
+    - name: Publish Solution
+      uses: microsoft/powerplatform-actions/publish-solution@v1
+      with:
+        environment-url: 'https://myenv.crm.dynamics.com'
+        user-name: 'me@myenv.onmicrosoft.com'
+        password-secret: ${{ secrets.MYPASSWORD }}
+
+    - name: Prepare solution changes for check-in into source control
+      uses: microsoft/powerplatform-actions/branch-solution@v1
+      with:
+        solution-folder: 'out/solutions/solution one'
+        solution-target-folder: 'src/solutions/solution1'
+        token: ${{ secrets.GITHUB_TOKEN }}
