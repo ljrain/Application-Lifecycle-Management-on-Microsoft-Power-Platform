@@ -1,6 +1,30 @@
 name: Export From DEV (Power Platform)
+run-name: Getting ${{ github.event.inputs.solution_name }} from pipelines host environment and committing
 on:
+  repository_dispatch:
+    types: [repository_dispatch]
   workflow_dispatch:
+    inputs:
+      artifact_url:
+        description: "The url of the Dataverse record ID for the artifact created by the pipelines (Example: https://[your-env].crm.dynamics.com/api/data/v9.0/deploymentartifacts([your-artifact-id])/artifactfile/$value)."
+        required: false
+      solution_name:
+        description: "Name of the Solution in Dataverse environment"
+        required: true
+      user_name: 
+        description: "User name for the commit"
+        required: false
+      source_branch:
+        description: "Branch for the solution commit"
+        required: false
+      target_branch:
+        description: "Branch to create for the solution commit"
+        required: false
+      commit_message:
+        description: "Message to provide for the commit"
+        required: true
+permissions:
+  contents: write
 
 jobs:
   Export:
@@ -17,21 +41,21 @@ jobs:
       - name: Publish Solution
         uses: microsoft/powerplatform-actions/publish-solution@v1
         with:
-          environment-url: ${{ vars.URL }}
-          app-id: ${{ vars.CLIENTID }}
+          environment-url: ${{ vars.DEV_URL }}
+          app-id: ${{ secrets.CLIENTID }}
           client-secret: ${{ secrets.CLIENTSECRET }}
-          tenant-id: ${{ vars.TENANTID }}
-          solution-name: DemoSolution
+          tenant-id: ${{ secrets.TENANTID }}
+          solution-name: ${{ github.event.inputs.solution_name }}
         
       - name: Export Solution - Unmanaged
         uses: microsoft/powerplatform-actions/export-solution@v1
         with:
-          environment-url: ${{ vars.URL }}
-          app-id: ${{ vars.CLIENTID }}
+          environment-url: ${{ vars.DEV_URL }}
+          app-id: ${{ secrets.CLIENTID }}
           client-secret: ${{ secrets.CLIENTSECRET }}
-          tenant-id: ${{ vars.TENANTID }}
-          solution-name: DemoSolution
-          solution-output-file: "${{runner.temp}}/exported/DemoSolution.zip"
+          tenant-id: ${{ secrets.TENANTID }}
+          solution-name: ${{ github.event.inputs.solution_name }}
+          solution-output-file: "${{runner.temp}}/exported/${{ github.event.inputs.solution_name }}.zip"
           managed: false
           run-asynchronously: true
           overwrite: true
@@ -39,21 +63,21 @@ jobs:
       - name: Export Solution - Managed
         uses: microsoft/powerplatform-actions/export-solution@v1
         with:
-          environment-url: ${{ vars.URL }}
-          app-id: ${{ vars.CLIENTID }}
+          environment-url: ${{ vars.DEV_URL }}
+          app-id: ${{ secrets.CLIENTID }}
           client-secret: ${{ secrets.CLIENTSECRET }}
-          tenant-id: ${{ vars.TENANTID }}
-          solution-name: DemoSolution
-          solution-output-file: "${{runner.temp}}/exported/DemoSolution_managed.zip"
-          managed: false
+          tenant-id: ${{ secrets.TENANTID }}
+          solution-name: ${{ github.event.inputs.solution_name }}
+          solution-output-file: "${{runner.temp}}/exported/${{ github.event.inputs.solution_name }}_managed.zip"
+          managed: true
           run-asynchronously: true
           overwrite: true
           
       - name: Unpack Solution
         uses: microsoft/powerplatform-actions/unpack-solution@v1
         with:
-          solution-file: '${{runner.temp}}/exported/DemoSolution.zip'
-          solution-folder: 'PowerPlatform/Solutions/DemoSolution'
+          solution-file: '${{runner.temp}}/exported/${{ github.event.inputs.solution_name }}.zip'
+          solution-folder: 'PowerPlatform/Solutions/${{ github.event.inputs.solution_name }}'
           solution-type: 'Both'
           overwrite-files: true
 
@@ -61,7 +85,7 @@ jobs:
         run: |
           git config user.email "<>"
           git config user.name "${{github.triggering_actor}}"
-          git add 'PowerPlatform/Solutions/DemoSolution' --all
-          git commit -m "DemoSolution Changes"
+          git add 'PowerPlatform/Solutions/${{ github.event.inputs.solution_name }}' --all
+          git commit -m "${{ github.event.inputs.solution_name }} Changes"
           git pull origin main
           git push origin main
