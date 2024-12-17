@@ -49,6 +49,7 @@ jobs:
           app-id: ${{ secrets.CLIENTID }}
           client-secret: ${{ secrets.CLIENTSECRET }}
           tenant-id: ${{ secrets.TENANTID }}
+          cloud: 'UsGov'
         
       - name: Export Solution - Unmanaged
         uses: microsoft/powerplatform-actions/export-solution@v1
@@ -62,6 +63,7 @@ jobs:
           managed: false
           run-asynchronously: true
           overwrite: true
+          cloud: 'UsGov'
 
       - name: Export Solution - Managed
         uses: microsoft/powerplatform-actions/export-solution@v1
