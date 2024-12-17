@@ -45,7 +45,6 @@ jobs:
           app-id: ${{ secrets.CLIENTID }}
           client-secret: ${{ secrets.CLIENTSECRET }}
           tenant-id: ${{ secrets.TENANTID }}
-          solution-name: ${{ github.event.inputs.solution_name }}
         
       - name: Export Solution - Unmanaged
         uses: microsoft/powerplatform-actions/export-solution@v1
