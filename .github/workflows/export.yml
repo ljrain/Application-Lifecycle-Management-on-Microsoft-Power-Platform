@@ -41,15 +41,6 @@ jobs:
 
       - name: Install Power Platform Tools
         uses: microsoft/powerplatform-actions/actions-install@v1
-
-      - name: Publish Solution
-        uses: microsoft/powerplatform-actions/publish-solution@v1
-        with:
-          environment-url: ${{ vars.DEV_URL }}
-          app-id: ${{ secrets.CLIENTID }}
-          client-secret: ${{ secrets.CLIENTSECRET }}
-          tenant-id: ${{ secrets.TENANTID }}
-          cloud: 'UsGov'
         
       - name: Export Solution - Unmanaged
         uses: microsoft/powerplatform-actions/export-solution@v1
